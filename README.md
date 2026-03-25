@@ -4,7 +4,7 @@ Sistema leve e eficiente para cronometragem de falas e controle de microfones em
 
 ## 🚀 Funcionalidades
 
-- **Cronômetro de Fala**: Controle preciso do tempo de fala dos vereadores (1, 3, 7 e 10 minutos).
+- **Cronômetro de Fala**: Controle preciso do tempo de fala dos vereadores (1, 3, 5, 7 e 10 minutos).
 - **Extração de Pauta (PDF)**: Leitura inteligente da pauta da sessão (coluna TÍTULO) para exibição automática no monitor.
 - **Controle de Microfones**: Integração via TCP/IP com controladoras de microfone (ex: Votech).
 - **Modo Aparte**: Suporte para dois cronômetros simultâneos na tela (orador principal e aparteante).
