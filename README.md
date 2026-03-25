@@ -38,8 +38,8 @@ Para rodar o projeto:
 java -jar target/camara-timer-1.6.1.jar
 ```
 
-## 🐧 Dica para Linux (Lubuntu)
-Se estiver rodando via Pen Drive (Modo Live), certifique-se de instalar o Java:
+## 🐧 Dica para Linux (Ubuntu ou variantes)
+Se estiver rodando Linux Ubuntu ou variantes como Lubuntu ou Xubuntu, certifique-se de instalar o Java:
 ```bash
 sudo apt update && sudo apt install default-jre
 ```
