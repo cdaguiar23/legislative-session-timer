@@ -191,8 +191,8 @@ public class SelectionPanel extends JPanel {
         radioPanel.setOpaque(false);
         
         timeGroup = new ButtonGroup();
-        String[] times = {"1", "3", "7", "10"};
-        String[] labels = {"1 Min", "3 Min", "7 Min", "10 Min"};
+        String[] times = {"1", "3", "5", "7", "10"};
+        String[] labels = {"1 Min", "3 Min", "5 Min", "7 Min", "10 Min"};
         
         for (int i = 0; i < times.length; i++) {
              JRadioButton rb = new JRadioButton(labels[i]);
@@ -378,15 +378,62 @@ public class SelectionPanel extends JPanel {
 
             card.add(Box.createVerticalStrut(5));
             card.add(statusDot);
+
+            // Two separate buttons: ABRIR and FECHAR (manual mic control per vereador)
+            JButton micOpenBtn = new JButton("ABRIR");
+            micOpenBtn.setFont(new Font("Arial", Font.BOLD, 12));
+            micOpenBtn.setBackground(new Color(30, 150, 30));
+            micOpenBtn.setForeground(Color.WHITE);
+            micOpenBtn.setFocusPainted(false);
+            micOpenBtn.setOpaque(true);
+            micOpenBtn.setBorderPainted(false);
+            micOpenBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            micOpenBtn.setPreferredSize(new Dimension(75, 30));
+
+            JButton micCloseBtn = new JButton("FECHAR");
+            micCloseBtn.setFont(new Font("Arial", Font.BOLD, 12));
+            micCloseBtn.setBackground(new Color(180, 30, 30));
+            micCloseBtn.setForeground(Color.WHITE);
+            micCloseBtn.setFocusPainted(false);
+            micCloseBtn.setOpaque(true);
+            micCloseBtn.setBorderPainted(false);
+            micCloseBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            micCloseBtn.setPreferredSize(new Dimension(75, 30));
+
+            micOpenBtn.addActionListener(e -> new Thread(() -> {
+                boolean success = micService.activateMicrophone(micId);
+                SwingUtilities.invokeLater(() -> updateMicIndicator(micId, success));
+            }).start());
+
+            micCloseBtn.addActionListener(e -> new Thread(() -> {
+                boolean success = micService.deactivateMicrophone(micId);
+                SwingUtilities.invokeLater(() -> updateMicIndicator(micId, !success ? micStates.getOrDefault(micId, false) : false));
+            }).start());
+
+            // Store references so updateMicIndicator can sync button appearance
+            statusDot.putClientProperty("micOpenBtn", micOpenBtn);
+            statusDot.putClientProperty("micCloseBtn", micCloseBtn);
+
+            JPanel micBtnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+            micBtnPanel.setOpaque(false);
+            micBtnPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+            micBtnPanel.add(micOpenBtn);
+            micBtnPanel.add(micCloseBtn);
+
+            card.add(Box.createVerticalStrut(5));
+            card.add(micBtnPanel);
             card.add(Box.createVerticalGlue());
 
             card.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if ("TRIBUNA".equalsIgnoreCase(v.getName())) {
-                        toggleTribunaMic(v);
-                    } else {
-                        openSpeakerWindow(v);
+                    // Only trigger if click is NOT on the toggle button
+                    if (e.getSource() == card) {
+                        if ("TRIBUNA".equalsIgnoreCase(v.getName())) {
+                            toggleTribunaMic(v);
+                        } else {
+                            openSpeakerWindow(v);
+                        }
                     }
                 }
             });
@@ -442,6 +489,21 @@ public class SelectionPanel extends JPanel {
         if (indicator != null) {
             indicator.putClientProperty("micColor", active ? new Color(0, 255, 0) : new Color(255, 0, 0));
             indicator.repaint();
+
+            // Highlight the active button (ABRIR=green bright, FECHAR=red bright)
+            Object openObj = indicator.getClientProperty("micOpenBtn");
+            Object closeObj = indicator.getClientProperty("micCloseBtn");
+            if (openObj instanceof JButton && closeObj instanceof JButton) {
+                JButton openBtn = (JButton) openObj;
+                JButton closeBtn = (JButton) closeObj;
+                if (active) {
+                    openBtn.setBackground(new Color(0, 200, 0));   // bright green = ativo
+                    closeBtn.setBackground(new Color(120, 20, 20)); // dim red
+                } else {
+                    openBtn.setBackground(new Color(20, 100, 20));  // dim green
+                    closeBtn.setBackground(new Color(220, 30, 30)); // bright red = ativo
+                }
+            }
         }
     }
 
