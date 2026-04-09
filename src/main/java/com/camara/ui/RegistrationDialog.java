@@ -23,7 +23,15 @@ public class RegistrationDialog extends JDialog {
         this.onConfigChanged = onConfigChanged;
         this.dataManager = new DataManager();
         this.micService = new MicrophoneService();
-        setSize(800, 600);
+        // Adaptive size for 1024x768 / 1014x768 screens
+        int width = 900;
+        int height = 650;
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        if (screen.width < 1024) {
+            width = (int) (screen.width * 0.95);
+            height = (int) (screen.height * 0.90);
+        }
+        setSize(width, height);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
         getContentPane().setBackground(Theme.BACKGROUND_DARK);

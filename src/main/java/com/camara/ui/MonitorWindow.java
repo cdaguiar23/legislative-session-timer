@@ -1,6 +1,5 @@
 package com.camara.ui;
 
-import com.camara.data.MicrophoneService;
 import com.camara.model.Law;
 import com.camara.model.Vereador;
 
@@ -12,16 +11,18 @@ public class MonitorWindow extends JFrame {
     private SpeakerPanel primarySpeaker;
     private SpeakerPanel secondarySpeaker;
     private SelectionPanel selectionPanel;
-    private MicrophoneService micService;
     private CardLayout cardLayout;
     private JPanel cardPanel;
     private CrestPanel crestPanel;
     private String currentCard = "Crest"; // Added field to track current card
     private JLabel lawDisplayLabel;
+    private JPanel expedienteCard;
+    private JLabel expedienteHeaderLabel;
+    private JLabel expedienteTitleLabel;
+    private JLabel expedienteAuthorLabel;
 
     public MonitorWindow(SelectionPanel selectionPanel) {
         this.selectionPanel = selectionPanel;
-        this.micService = new MicrophoneService();
         setTitle("Câmara de Canelinha - Monitor");
         setSize(1024, 768);
 
@@ -66,6 +67,42 @@ public class MonitorWindow extends JFrame {
 
         cardPanel.add(timerCardContainer, "Timer");
 
+        // Expediente Card
+        expedienteCard = new JPanel(new GridBagLayout());
+        expedienteCard.setBackground(Theme.BACKGROUND_DARK);
+        
+        JPanel expedienteCenterPanel = new JPanel();
+        expedienteCenterPanel.setLayout(new BoxLayout(expedienteCenterPanel, BoxLayout.Y_AXIS));
+        expedienteCenterPanel.setBackground(Theme.BACKGROUND_DARK);
+        
+        expedienteHeaderLabel = new JLabel("EXPEDIENTE");
+        expedienteHeaderLabel.setFont(new Font("Arial", Font.BOLD, 80));
+        expedienteHeaderLabel.setForeground(Theme.ACCENT_COLOR); // Blue accent to stand out
+        expedienteHeaderLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        expedienteHeaderLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        expedienteTitleLabel = new JLabel("TITULO");
+        expedienteTitleLabel.setFont(new Font("Arial", Font.BOLD, 64));
+        expedienteTitleLabel.setForeground(Theme.TEXT_PRIMARY);
+        expedienteTitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        expedienteTitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        expedienteAuthorLabel = new JLabel("AUTOR");
+        expedienteAuthorLabel.setFont(new Font("Arial", Font.BOLD, 52));
+        expedienteAuthorLabel.setForeground(new Color(200, 200, 200)); // Slightly lighter gray for authorship distinction
+        expedienteAuthorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        expedienteAuthorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        expedienteCenterPanel.add(expedienteHeaderLabel);
+        expedienteCenterPanel.add(Box.createVerticalStrut(60)); // Larger gap
+        expedienteCenterPanel.add(expedienteTitleLabel);
+        expedienteCenterPanel.add(Box.createVerticalStrut(50));
+        expedienteCenterPanel.add(expedienteAuthorLabel);
+        
+        expedienteCard.add(expedienteCenterPanel);
+        
+        cardPanel.add(expedienteCard, "Expediente");
+
         add(cardPanel, BorderLayout.CENTER);
 
         showCrest();
@@ -80,18 +117,10 @@ public class MonitorWindow extends JFrame {
 
     public void stopAllAndDeactivate() {
         if (primarySpeaker != null) {
-            micService.deactivateMicrophone(primarySpeaker.getVereador().getMicrofoneId());
             primarySpeaker.stopTimer();
-            if (selectionPanel != null) {
-                selectionPanel.updateMicIndicator(primarySpeaker.getVereador().getMicrofoneId(), false);
-            }
         }
         if (secondarySpeaker != null) {
-            micService.deactivateMicrophone(secondarySpeaker.getVereador().getMicrofoneId());
             secondarySpeaker.stopTimer();
-            if (selectionPanel != null) {
-                selectionPanel.updateMicIndicator(secondarySpeaker.getVereador().getMicrofoneId(), false);
-            }
         }
     }
 
@@ -109,6 +138,21 @@ public class MonitorWindow extends JFrame {
 
     private String getCurrentCardName() {
         return currentCard;
+    }
+
+    public boolean isSpeakerActive() {
+        return "Timer".equals(currentCard);
+    }
+
+    public void showExpediente(Law law) {
+        stopAllAndDeactivate();
+        
+        // Use HTML to ensure centering and wrap
+        expedienteTitleLabel.setText("<html><div style='text-align: center; width: 800px;'>" + law.getTitle().toUpperCase() + "</div></html>");
+        expedienteAuthorLabel.setText("AUTORIA: " + (law.getAuthor().isEmpty() ? "---" : law.getAuthor()));
+        
+        cardLayout.show(cardPanel, "Expediente");
+        currentCard = "Expediente";
     }
 
     public void showSpeaker(Vereador vereador, int minutes, Law law) {
@@ -168,7 +212,6 @@ public class MonitorWindow extends JFrame {
 
     public void closeAparte() {
         if (secondarySpeaker != null) {
-            micService.deactivateMicrophone(secondarySpeaker.getVereador().getMicrofoneId());
             mainContainer.remove(secondarySpeaker);
             secondarySpeaker.stopTimer();
             secondarySpeaker = null;
@@ -233,13 +276,20 @@ public class MonitorWindow extends JFrame {
             // Photo
             photoContainer = new JPanel(new GridBagLayout());
             photoContainer.setBackground(Theme.BACKGROUND_DARK);
-            photoContainer.setPreferredSize(new Dimension(isAparte ? 450 : 650, 0));
+            // Default width, will be updated in setDual
+            photoContainer.setPreferredSize(new Dimension(isAparte ? 280 : 500, 0));
 
             photoLabel = new JLabel();
             photoLabel.setHorizontalAlignment(SwingConstants.CENTER);
             updatePhoto();
-            photoLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-            photoContainer.add(photoLabel);
+            photoLabel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 20));
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.weightx = 1.0;
+            gbc.weighty = 1.0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            photoContainer.add(photoLabel, gbc);
             
             add(photoContainer, BorderLayout.WEST);
 
@@ -283,8 +333,8 @@ public class MonitorWindow extends JFrame {
                 timerPanel.updateTime(remainingSeconds, totalInitialSeconds, formatTime(remainingSeconds));
                 if (remainingSeconds < 0) {
                     timer.stop();
-                    micService.deactivateMicrophone(vereador.getMicrofoneId());
                     if (selectionPanel != null) {
+                        selectionPanel.getMicService().deactivateMicrophone(vereador.getMicrofoneId());
                         selectionPanel.updateMicIndicator(vereador.getMicrofoneId(), false);
                     }
                 }
@@ -311,7 +361,7 @@ public class MonitorWindow extends JFrame {
 
         public void setDual(boolean dual) {
             this.isDual = dual;
-            photoContainer.setPreferredSize(new Dimension(isDual ? 450 : 650, 0));
+            photoContainer.setPreferredSize(new Dimension(isDual ? 280 : 500, 0));
             updatePhoto();
             updateFonts();
             revalidate();
@@ -326,8 +376,8 @@ public class MonitorWindow extends JFrame {
                     if (file.exists()) {
                         Image img = javax.imageio.ImageIO.read(file);
                         if (img != null) {
-                            int targetWidth = isDual ? 350 : 500;
-                            int targetHeight = isDual ? 450 : 650;
+                            int targetWidth = isDual ? 280 : 400;
+                            int targetHeight = isDual ? 400 : 500;
 
                             double scale = Math.min((double) targetWidth / img.getWidth(null),
                                     (double) targetHeight / img.getHeight(null));
@@ -361,11 +411,11 @@ public class MonitorWindow extends JFrame {
             if (isDual) {
                 nameLabel.setFont(Theme.FONT_SUBTITLE);
                 partyLabel.setFont(Theme.FONT_NORMAL);
-                timerPanel.setPreferredSize(new Dimension(300, 300));
+                timerPanel.setPreferredSize(new Dimension(180, 180));
             } else {
                 nameLabel.setFont(Theme.FONT_VEREADOR_NAME);
                 partyLabel.setFont(Theme.FONT_VEREADOR_PARTY);
-                timerPanel.setPreferredSize(new Dimension(450, 450));
+                timerPanel.setPreferredSize(new Dimension(350, 350));
             }
         }
 

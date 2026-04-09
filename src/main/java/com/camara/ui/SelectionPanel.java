@@ -61,7 +61,7 @@ public class SelectionPanel extends JPanel {
         add(headerPanel, BorderLayout.NORTH);
 
         // Center: Grid of Vereadores
-        gridPanel = new JPanel(new GridLayout(0, 4, 15, 15)); // 4 columns, auto rows
+        gridPanel = new JPanel(new GridLayout(0, 3, 15, 15)); // Changed from 4 to 3 columns to fit better on 1024x768
         gridPanel.setBackground(Theme.BACKGROUND_DARK);
         gridPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         JScrollPane scrollPane = new JScrollPane(gridPanel);
@@ -80,7 +80,7 @@ public class SelectionPanel extends JPanel {
         lawsList = new JList<>(lawsModel);
         lawsList.setBackground(Theme.BACKGROUND_CARD);
         lawsList.setForeground(Theme.TEXT_PRIMARY);
-        lawsList.setFont(new Font("Arial", Font.BOLD, 20));
+        lawsList.setFont(new Font("Arial", Font.BOLD, 16));
         lawsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lawsList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
@@ -90,7 +90,12 @@ public class SelectionPanel extends JPanel {
                     ((JLabel) c).setBorder(BorderFactory.createEmptyBorder(15, 10, 15, 10));
                     ((JLabel) c).setHorizontalAlignment(SwingConstants.CENTER);
                 }
-                if (isSelected) {
+                
+                if (value instanceof Law && "SECTION_HEADER".equals(((Law) value).getNumber())) {
+                    c.setBackground(new Color(100, 100, 100)); // Header background
+                    c.setForeground(Theme.ACCENT_COLOR);
+                    c.setFont(new Font("Arial", Font.BOLD, 18));
+                } else if (isSelected) {
                     c.setBackground(Theme.ACCENT_COLOR);
                     c.setForeground(Color.BLACK);
                 } else {
@@ -101,8 +106,22 @@ public class SelectionPanel extends JPanel {
             }
         });
         
+        lawsList.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                Law selected = lawsList.getSelectedValue();
+                if (selected != null && "EXPEDIENTE".equals(selected.getSection()) && !"SECTION_HEADER".equals(selected.getNumber())) {
+                    MonitorWindow mw = mainFrame.getMonitorWindow();
+                    if (mw != null) {
+                        mw.showExpediente(selected);
+                        mw.setVisible(true);
+                    }
+                }
+            }
+        });
+        
         JScrollPane lawsScroll = new JScrollPane(lawsList);
-        lawsScroll.setPreferredSize(new Dimension(200, 0));
+        lawsScroll.setPreferredSize(new Dimension(180, 0));
         lawsScroll.setBorder(null);
         westPanel.add(lawsScroll, BorderLayout.CENTER);
         
@@ -112,7 +131,7 @@ public class SelectionPanel extends JPanel {
         monitorPanel = new JPanel();
         monitorPanel.setLayout(new BoxLayout(monitorPanel, BoxLayout.Y_AXIS));
         monitorPanel.setBackground(Theme.BACKGROUND_CARD);
-        monitorPanel.setPreferredSize(new Dimension(300, 0));
+        monitorPanel.setPreferredSize(new Dimension(250, 0));
         monitorPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(Theme.ACCENT_COLOR),
                 "MONITORAMENTO", 0, 0, Theme.FONT_NORMAL, Theme.TEXT_PRIMARY));
@@ -128,7 +147,7 @@ public class SelectionPanel extends JPanel {
         monitorPartyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         monitorTimeLabel = new JLabel("00:00");
-        monitorTimeLabel.setFont(new Font("Arial", Font.BOLD, 48));
+        monitorTimeLabel.setFont(new Font("Arial", Font.BOLD, 42)); // Slightly smaller font
         monitorTimeLabel.setForeground(Theme.ACCENT_COLOR);
         monitorTimeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -154,7 +173,7 @@ public class SelectionPanel extends JPanel {
         closeSpeakerBtn.addActionListener(e -> {
             MonitorWindow mw = mainFrame.getMonitorWindow();
             if (mw != null) {
-                mw.showCrest();
+                mw.showCrest(); // Notice: showCrest will be modified to NOT deactivate mics
                 updateMonitor("---", "---", "00:00");
                 setAparteActive(false);
                 closeSpeakerBtn.setVisible(false);
@@ -197,7 +216,7 @@ public class SelectionPanel extends JPanel {
         for (int i = 0; i < times.length; i++) {
              JRadioButton rb = new JRadioButton(labels[i]);
              rb.setActionCommand(times[i]);
-             rb.setFont(new Font("Arial", Font.BOLD, 14));
+             rb.setFont(new Font("Arial", Font.BOLD, 12)); // Sightly smaller
              rb.setForeground(Theme.TEXT_PRIMARY);
              rb.setOpaque(false);
             if (times[i].equals("10")) rb.setSelected(true);
@@ -213,7 +232,7 @@ public class SelectionPanel extends JPanel {
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
         centerPanel.setOpaque(false);
 
-        JButton connectBtn = createStyledButton("CONECTAR", new Color(150, 150, 255), 90);
+        JButton connectBtn = createStyledButton("CONECTAR", new Color(150, 150, 255), 80);
         connectBtn.addActionListener(e -> {
             new Thread(() -> {
                 boolean success = micService.connect();
@@ -227,13 +246,13 @@ public class SelectionPanel extends JPanel {
             }).start();
         });
 
-        JButton disconnectBtn = createStyledButton("DESCONECTAR", new Color(200, 200, 200), 100);
+        JButton disconnectBtn = createStyledButton("DESCONECTAR", new Color(200, 200, 200), 95);
         disconnectBtn.addActionListener(e -> {
             micService.releaseAndDisconnect();
             JOptionPane.showMessageDialog(SelectionPanel.this, "Controladora Desconectada.");
         });
 
-        JButton openAllBtn = createStyledButton("ABRIR TODOS", new Color(150, 255, 150), 110);
+        JButton openAllBtn = createStyledButton("ABRIR TODOS", new Color(150, 255, 150), 100);
         openAllBtn.addActionListener(e -> {
             new Thread(() -> {
                 List<Vereador> vereadores = dataManager.loadVereadores();
@@ -245,7 +264,7 @@ public class SelectionPanel extends JPanel {
             }).start();
         });
 
-        JButton closeAllBtn = createStyledButton("FECHAR TODOS", new Color(255, 150, 150), 110);
+        JButton closeAllBtn = createStyledButton("FECHAR TODOS", new Color(255, 150, 150), 100);
         closeAllBtn.addActionListener(e -> {
             new Thread(() -> {
                 List<Vereador> vereadores = dataManager.loadVereadores();
@@ -271,13 +290,13 @@ public class SelectionPanel extends JPanel {
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actionPanel.setOpaque(false);
 
-        JButton addMinuteBtn = createStyledButton("+1 Minuto", Theme.ACCENT_COLOR, 110);
+        JButton addMinuteBtn = createStyledButton("+1 Minuto", Theme.ACCENT_COLOR, 100);
         addMinuteBtn.addActionListener(e -> {
             MonitorWindow mw = mainFrame.getMonitorWindow();
             if (mw != null && mw.isVisible()) mw.addExtraMinute();
         });
 
-        JButton closeMonitorBtn = createStyledButton("FECHAR MONITOR", Theme.WARNING_COLOR, 150);
+        JButton closeMonitorBtn = createStyledButton("FECHAR MONITOR", Theme.WARNING_COLOR, 140);
         closeMonitorBtn.addActionListener(e -> {
             MonitorWindow mw = mainFrame.getMonitorWindow();
             if (mw != null) mw.setVisible(false);
@@ -324,8 +343,21 @@ public class SelectionPanel extends JPanel {
 
         if (config.getPautaPath() != null && !config.getPautaPath().isEmpty()) {
             List<Law> laws = pdfService.extractLawsFromPdf(config.getPautaPath());
+            
+            // Ordem do Dia section
+            lawsModel.addElement(new Law("SECTION_HEADER", "ORDEM DO DIA", ""));
             for (Law law : laws) {
-                lawsModel.addElement(law);
+                if ("ORDEM DO DIA".equals(law.getSection())) {
+                    lawsModel.addElement(law);
+                }
+            }
+            
+            // Expediente section
+            lawsModel.addElement(new Law("SECTION_HEADER", "EXPEDIENTE", ""));
+            for (Law law : laws) {
+                if ("EXPEDIENTE".equals(law.getSection())) {
+                    lawsModel.addElement(law);
+                }
             }
         }
 
@@ -427,7 +459,6 @@ public class SelectionPanel extends JPanel {
             card.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    // Only trigger if click is NOT on the toggle button
                     if (e.getSource() == card) {
                         if ("TRIBUNA".equalsIgnoreCase(v.getName())) {
                             toggleTribunaMic(v);
@@ -525,17 +556,13 @@ public class SelectionPanel extends JPanel {
         String cmd = timeGroup.getSelection().getActionCommand();
         int minutes = Integer.parseInt(cmd);
 
-        // Try to activate microphone
-        boolean micSuccess = micService.activateMicrophone(vereador.getMicrofoneId());
-
-        // Update indicator color
-        updateMicIndicator(vereador.getMicrofoneId(), micSuccess);
-
+        // Microphone activation removed as per user request (manual buttons only)
+        
         SwingUtilities.invokeLater(() -> {
             MonitorWindow mw = mainFrame.getMonitorWindow();
             if (mw != null) {
                 Law selectedLaw = lawsList.getSelectedValue();
-                if (mw.isVisible() && !mw.isShowingCrest()) {
+                if (mw.isVisible() && mw.isSpeakerActive()) {
                     mw.setAparte(vereador, minutes, selectedLaw);
                 } else {
                     mw.showSpeaker(vereador, minutes, selectedLaw);

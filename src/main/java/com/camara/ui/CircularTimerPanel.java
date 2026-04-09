@@ -29,7 +29,7 @@ public class CircularTimerPanel extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int size = Math.min(getWidth(), getHeight()) - 20;
+        int size = Math.min(getWidth(), getHeight()) - 60;
         int x = (getWidth() - size) / 2;
         int y = (getHeight() - size) / 2;
 
