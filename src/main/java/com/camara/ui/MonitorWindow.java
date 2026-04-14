@@ -144,15 +144,20 @@ public class MonitorWindow extends JFrame {
         return "Timer".equals(currentCard);
     }
 
-    public void showExpediente(Law law) {
+    public void showLaw(Law law) {
         stopAllAndDeactivate();
-        
-        // Use HTML to ensure centering and wrap
+
+        String sectionLabel = law.getSection() != null && !law.getSection().isEmpty() ? law.getSection() : "LEI";
+        expedienteHeaderLabel.setText(sectionLabel);
         expedienteTitleLabel.setText("<html><div style='text-align: center; width: 800px;'>" + law.getTitle().toUpperCase() + "</div></html>");
         expedienteAuthorLabel.setText("AUTORIA: " + (law.getAuthor().isEmpty() ? "---" : law.getAuthor()));
-        
+
         cardLayout.show(cardPanel, "Expediente");
         currentCard = "Expediente";
+    }
+
+    public void showExpediente(Law law) {
+        showLaw(law);
     }
 
     public void showSpeaker(Vereador vereador, int minutes, Law law) {

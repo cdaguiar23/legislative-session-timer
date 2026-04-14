@@ -110,10 +110,10 @@ public class SelectionPanel extends JPanel {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 Law selected = lawsList.getSelectedValue();
-                if (selected != null && "EXPEDIENTE".equals(selected.getSection()) && !"SECTION_HEADER".equals(selected.getNumber())) {
+                if (selected != null && !"SECTION_HEADER".equals(selected.getNumber())) {
                     MonitorWindow mw = mainFrame.getMonitorWindow();
                     if (mw != null) {
-                        mw.showExpediente(selected);
+                        mw.showLaw(selected);
                         mw.setVisible(true);
                     }
                 }
@@ -456,18 +456,20 @@ public class SelectionPanel extends JPanel {
             card.add(micBtnPanel);
             card.add(Box.createVerticalGlue());
 
-            card.addMouseListener(new MouseAdapter() {
+            MouseAdapter speakerClickListener = new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (e.getSource() == card) {
-                        if ("TRIBUNA".equalsIgnoreCase(v.getName())) {
-                            toggleTribunaMic(v);
-                        } else {
-                            openSpeakerWindow(v);
-                        }
+                    if ("TRIBUNA".equalsIgnoreCase(v.getName())) {
+                        toggleTribunaMic(v);
+                    } else {
+                        openSpeakerWindow(v);
                     }
                 }
-            });
+            };
+
+            card.addMouseListener(speakerClickListener);
+            nameLabel.addMouseListener(speakerClickListener);
+            partyLabel.addMouseListener(speakerClickListener);
 
             gridPanel.add(card);
         }

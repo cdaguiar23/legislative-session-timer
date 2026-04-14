@@ -126,7 +126,6 @@ public class PdfValidationExample {
         PdfService.PdfMetadata metadata = pdf.getPdfMetadata(pdfPath);
         
         System.out.println("📋 DIAGNÓSTICO COMPLETO");
-        System.out.println("─".repeat(50));
         
         System.out.println("\n1. Arquivo:");
         System.out.println("   Nome: " + metadata.fileName);
@@ -157,8 +156,6 @@ public class PdfValidationExample {
                 System.out.println("   Motivo: " + validation.errorMessage);
             }
         }
-        
-        System.out.println("\n─".repeat(50));
         
         // Tentar processar de qualquer forma
         System.out.println("\nTentando extrair leis...");
